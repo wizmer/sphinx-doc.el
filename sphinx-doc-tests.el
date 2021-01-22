@@ -74,7 +74,7 @@
                                  :fields (list (make-sphinx-doc-field :key "param" :arg "name")
                                                (make-sphinx-doc-field :key "returns")
                                                (make-sphinx-doc-field :key "rtype")
-                                       )))
+                                               )))
         (d2 (make-sphinx-doc-doc :summary "Just another function"
                                  :before-fields "This is some text before the fields section."
                                  :after-fields "This is some text after the fields section."
@@ -83,9 +83,30 @@
                                                (make-sphinx-doc-field :key "rtype" :desc "integer")
                                                ))))
     (should (string= (sphinx-doc-doc->str d1)
-                     "\"\"\"FIXME! briefly describe function\n\n:param name: \n:returns: \n:rtype: \n\n\"\"\""))
+                     (s-join
+                      "\n"
+                      (list
+                       "\"\"\"FIXME! briefly describe function"
+                       ""
+                       ":param name: "
+                       ":returns: "
+                       ":rtype: "
+                       ""
+                       "\"\"\""))))
     (should (string= (sphinx-doc-doc->str d2)
-                     "\"\"\"Just another function\n\nThis is some text before the fields section.\n\n:param name: \n:returns: constant 42\n:rtype: integer\n\nThis is some text after the fields section.\n\"\"\""))))
+                     (s-join
+                      "\n"
+                      (list
+                       "\"\"\"Just another function"
+                       ""
+                       "This is some text before the fields section."
+                       ""
+                       ":param name: "
+                       ":returns: constant 42"
+                       ":rtype: integer"
+                       ""
+                       "This is some text after the fields section."
+                       "\"\"\""))))))
 
 
 (ert-deftest sphinx-doc-test-parse ()
