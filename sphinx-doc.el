@@ -77,6 +77,11 @@
   "If non-nil, the docstring will be indented.")
 (defcustom sphinx-doc-include-types t
   "If non-nil, the docstring will also include the type.")
+(defcustom sphinx-doc-docstring-style "sphinx"
+  "The style of docstring to use:
+- sphinx: https://sphinx-rtd-tutorial.readthedocs.io/en/latest/docstrings.html#the-sphinx-docstring-format
+- google: https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html"
+  :type 'string)
 
 ;; struct definitions
 
@@ -207,6 +212,35 @@ Returns nil if string is not a function definition."
                      `(("key" . ,(sphinx-doc-field-key f))
                        ("desc" . ,(sphinx-doc-field-desc f)))))))
 
+(defun sphinx-doc-google-field->str (f)
+  "Convert a field object F to it's string representation according to the Google Style
+https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html"
+  (s-join
+   "\n"
+   (-filter
+    (lambda (x) (not (equal x nil)))
+
+    (list
+     (when (equal (sphinx-doc-field-key f) "returns")
+       "\nReturns:")
+
+     (cond ((and (stringp (sphinx-doc-field-arg f))
+                 (stringp (sphinx-doc-field-type f)))
+            (s-format "    ${arg} (${type}): ${desc}"
+                      'aget
+                      `(("type" . ,(sphinx-doc-field-type f))
+                        ("arg" . ,(sphinx-doc-field-arg f))
+                        ("desc" . ,(sphinx-doc-field-desc f)))))
+           ((stringp (sphinx-doc-field-arg f))
+            (s-format "    ${arg}: ${desc}"
+                      'aget
+                      `(("arg" . ,(sphinx-doc-field-arg f))
+                        ("desc" . ,(sphinx-doc-field-desc f)))))
+           ((not (string= (sphinx-doc-field-desc f) ""))
+            (s-format "    ${desc}"
+                      'aget
+                      `(("desc" . ,(sphinx-doc-field-desc f)))))
+           )))))
 
 (defun sphinx-doc-doc->str (ds)
   "Convert a doc object DS into string representation."
@@ -218,7 +252,11 @@ Returns nil if string is not a function definition."
           (when (and (sphinx-doc-doc-before-fields ds)
                      (not (string= (sphinx-doc-doc-before-fields ds) "")))
             (concat (sphinx-doc-doc-before-fields ds) "\n"))
-          (s-join "\n" (mapcar #'sphinx-doc-field->str
+          (if (string= sphinx-doc-docstring-style "google")
+              "Args:")
+          (s-join "\n" (mapcar (if (string= sphinx-doc-docstring-style "sphinx")
+                                   #'sphinx-doc-field->str
+                                 #'sphinx-doc-google-field->str)
                                (sphinx-doc-doc-fields ds)))
           ""
           (when (and (sphinx-doc-doc-after-fields ds)

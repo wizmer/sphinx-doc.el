@@ -67,47 +67,6 @@
                    ":rtype: ")))
 
 
-(ert-deftest sphinx-doc-test-doc->str ()
-  (let ((d1 (make-sphinx-doc-doc :summary "FIXME! briefly describe function"
-                                 :before-fields ""
-                                 :after-fields ""
-                                 :fields (list (make-sphinx-doc-field :key "param" :arg "name")
-                                               (make-sphinx-doc-field :key "returns")
-                                               (make-sphinx-doc-field :key "rtype")
-                                               )))
-        (d2 (make-sphinx-doc-doc :summary "Just another function"
-                                 :before-fields "This is some text before the fields section."
-                                 :after-fields "This is some text after the fields section."
-                                 :fields (list (make-sphinx-doc-field :key "param" :arg "name")
-                                               (make-sphinx-doc-field :key "returns" :desc "constant 42")
-                                               (make-sphinx-doc-field :key "rtype" :desc "integer")
-                                               ))))
-    (should (string= (sphinx-doc-doc->str d1)
-                     (s-join
-                      "\n"
-                      (list
-                       "\"\"\"FIXME! briefly describe function"
-                       ""
-                       ":param name: "
-                       ":returns: "
-                       ":rtype: "
-                       ""
-                       "\"\"\""))))
-    (should (string= (sphinx-doc-doc->str d2)
-                     (s-join
-                      "\n"
-                      (list
-                       "\"\"\"Just another function"
-                       ""
-                       "This is some text before the fields section."
-                       ""
-                       ":param name: "
-                       ":returns: constant 42"
-                       ":rtype: integer"
-                       ""
-                       "This is some text after the fields section."
-                       "\"\"\""))))))
-
 
 (ert-deftest sphinx-doc-test-parse ()
   (should (equal (sphinx-doc-parse "This is a docstring without params." 0)
@@ -247,3 +206,88 @@
                          (make-sphinx-doc-field :key "returns" :type nil :arg nil :desc "constant 42")
                          (make-sphinx-doc-field :key "rtype" :type nil :arg nil :desc "integer")
                          (make-sphinx-doc-field :key "raises" :type nil :arg nil :desc "KeyError"))))))
+
+(ert-deftest sphinx-doc-test-doc->str ()
+  (let ((d1 (make-sphinx-doc-doc :summary "FIXME! briefly describe function"
+                                 :before-fields ""
+                                 :after-fields ""
+                                 :fields (list (make-sphinx-doc-field :key "param" :arg "name")
+                                               (make-sphinx-doc-field :key "returns")
+                                               (make-sphinx-doc-field :key "rtype")
+                                               )))
+        (d2 (make-sphinx-doc-doc :summary "Just another function"
+                                 :before-fields "This is some text before the fields section."
+                                 :after-fields "This is some text after the fields section."
+                                 :fields (list (make-sphinx-doc-field :key "param" :arg "name")
+                                               (make-sphinx-doc-field :key "returns" :desc "constant 42")
+                                               (make-sphinx-doc-field :key "rtype" :desc "integer")
+                                               ))))
+    (should (string= (sphinx-doc-doc->str d1)
+                     (s-join
+                      "\n"
+                      (list
+                       "\"\"\"FIXME! briefly describe function"
+                       ""
+                       ":param name: "
+                       ":returns: "
+                       ":rtype: "
+                       ""
+                       "\"\"\""))))
+    (should (string= (sphinx-doc-doc->str d2)
+                     (s-join
+                      "\n"
+                      (list
+                       "\"\"\"Just another function"
+                       ""
+                       "This is some text before the fields section."
+                       ""
+                       ":param name: "
+                       ":returns: constant 42"
+                       ":rtype: integer"
+                       ""
+                       "This is some text after the fields section."
+                       "\"\"\""))))))
+
+(ert-deftest sphinx-doc-test-doc-google-styple->str ()
+  (customize-set-variable 'sphinx-doc-docstring-style "google")
+
+  (should (string= (sphinx-doc-doc->str
+                    (make-sphinx-doc-doc :summary "FIXME! briefly describe function"
+                                         :before-fields ""
+                                         :after-fields ""
+                                         :fields (list (make-sphinx-doc-field :key "param" :arg "name")
+                                                       (make-sphinx-doc-field :key "returns"))))
+                   (s-join
+                    "\n"
+                    (list
+                     "\"\"\"FIXME! briefly describe function"
+                     ""
+                     "Args:"
+                     "    name: "
+                     ""
+                     "Returns:"
+                     ""
+                     "\"\"\""))))
+
+  (should (string= (sphinx-doc-doc->str
+                    (make-sphinx-doc-doc :summary "Just another function"
+                                         :before-fields "This is some text before the fields section."
+                                         :after-fields "This is some text after the fields section."
+                                         :fields (list (make-sphinx-doc-field :key "param" :arg "name")
+                                                       (make-sphinx-doc-field :key "returns" :desc "The constant 42")
+                                                       )))
+                   (s-join
+                    "\n"
+                    (list
+                     "\"\"\"Just another function"
+                     ""
+                     "This is some text before the fields section."
+                     ""
+                     "Args:"
+                     "    name: "
+                     ""
+                     "Returns:"
+                     "    The constant 42"
+                     ""
+                     "This is some text after the fields section."
+                     "\"\"\"")))))
